@@ -18,7 +18,6 @@ import pypinyin as py
 
 class Bot(object):
     def __init__(self,baiduAPK:dict):
-        self.Min_Size=[919,293,1619,793]
         self.Window_Size=[]
         self.sleeptime=0.5
         self.hwnd=None
