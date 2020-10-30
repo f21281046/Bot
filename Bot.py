@@ -163,16 +163,6 @@ class Bot(object):
         if T==0:
             pyperclip.copy(M)
             pyautogui.hotkey("ctrl",'v')
-            # vKeyList=self.__ConvertToKeyboard(M)
-            # for temp in vKeyList:
-            #     if(temp['T']==0):
-            #         pyautogui.typewrite(temp['V'],interval=0.15)
-            #     else:
-            #         self.__KeyboardSwaith(False)
-            #         pyautogui.typewrite(temp['V'],interval=0.15)
-            #         self.__KeyboardSwaith()
-            #     pass
-            # pass
         else:
             pyautogui.press(M)
         pass
