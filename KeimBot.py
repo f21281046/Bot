@@ -13,7 +13,6 @@ import time
 import sys
 import numpy as np
 from aip import AipOcr
-import pypinyin as py
 
 
 class Bot(object):
@@ -27,6 +26,7 @@ class Bot(object):
         pyautogui.FAILSAFE = True
         pyautogui.PAUSE = 0.5
         self.AppName=''
+        self.AppClassName=''
         """
         初始化
         """
@@ -41,6 +41,11 @@ class Bot(object):
             else:
                 raise Exception('APIID is Error')
 
+            if(baiduAPK.__contains__('AppClassName')):
+                self.AppClassName=baiduAPK.get('AppClassName')
+            else:
+                raise Exception("AppClassName is Error")
+
             if baiduAPK.__contains__('APIKEY'):
                 self.API_KEY=baiduAPK['APIKEY']
             else:
@@ -52,7 +57,7 @@ class Bot(object):
                 raise Exception('SECRETKEY is Error')
 
         pass
-        self.__Initialization()
+        
     pass
 
     def Exec(self,commands:list):
@@ -62,6 +67,7 @@ class Bot(object):
         if sys.platform!='win32':
             raise Exception('Error System OS')
         pass
+        self.__Initialization()
         if(self.hwnd!=None):
             for value in commands:
                 if(value["COM"]=='K'):
@@ -70,6 +76,10 @@ class Bot(object):
                     self.__MouseOption(value["VALUE"])
                 elif value["COM"]=='W':
                     self.__sleepOption(value["VALUE"])
+                elif value['COM']=='C':
+                    img=self.__CutImage(value["VALUE"])
+                    msg=self.__VerificatioImage(img)
+                    return msg
                 else:
                     print('NOT FIND COMMAND')
             pass
@@ -116,12 +126,16 @@ class Bot(object):
         """
         docstring
         """
-        self.hwnd = win32gui.FindWindow(None, self.AppName)
-        if(self.hwnd!=None):
-            win32gui.ShowWindow(self.hwnd, win32con.SW_SHOWNORMAL)
-            win32gui.SetForegroundWindow(self.hwnd)
-            self.Window_Size=win32gui.GetWindowRect(self.hwnd)
-        pass
+        try:
+            self.hwnd = win32gui.FindWindow(self.AppClassName, self.AppName)
+            if(self.hwnd!=None):
+               win32gui.ShowWindow(self.hwnd, win32con.SW_SHOWNORMAL)
+               win32gui.SetForegroundWindow(self.hwnd)
+               self.Window_Size=win32gui.GetWindowRect(self.hwnd)
+            pass
+        except Exception as ex:
+            self.hwnd=None
+            pass
     pass
 
     def __sleepOption(self, ky):
@@ -138,7 +152,7 @@ class Bot(object):
     def __KeyboardOption(self,ky:dict):
         """
         键盘操作方法
-        dict: T:0输入 1:键 M:内容 {T:0,M:'abc'}} 
+        dict: T:0输入 1:键 2:快捷键 M:内容 {T:0,M:'abc'}} 
         """
         T=0
         M=''
@@ -163,6 +177,15 @@ class Bot(object):
         if T==0:
             pyperclip.copy(M)
             pyautogui.hotkey("ctrl",'v')
+        elif T==2:
+            if(len(M)==1):
+                pyautogui.hotkey(M[0])
+            elif(len(M)==2):
+                pyautogui.hotkey(M[0],M[1])
+            elif(len(M)==3):
+                pyautogui.hotkey(M[0],M[1],M[2])
+            else:
+                pass
         else:
             pyautogui.press(M)
         pass
@@ -236,23 +259,6 @@ class Bot(object):
 pass
 
 
-if __name__ == "__main__":
-    sbot=Bot({'AppName':'微信','APIID':'百度ID',
-    'APIKEY':'百度APK',
-    'SECRETKEY':'百度SECRKEY'})
-
-    cmd=[
-        {'COM':'M','VALUE':{'T':0,'X':110,'Y':40}}, 
-        {'COM':'M','VALUE':{'T':1,'E':0,'X':None,'Y':None,'C':1}}, 
-        {'COM':'W','VALUE':{'T':0.5}}, 
-        {'COM':'K','VALUE':{'T':0,'M':'JCB-'}},
-        {'COM':'K','VALUE':{'T':1,'M':'enter'}},
-	    {'COM':'K','VALUE':{'T':0,'M':'测试输入值'}},             #键盘输入abc
-        {'COM':'K','VALUE':{'T':1,'M':'enter'}},            #键盘指定键enter
-    ]
-
-    sbot.Exec(cmd)
-pass
 
 '''
 命令结构定义
