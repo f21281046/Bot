@@ -1,18 +1,28 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
+##################################################
+#   叶落已三秋
+#   2020-10-12
+#   Windows 平台通用机器人
+#   注意：
+#   baiduAPK入参为机器人配置参数（因之前加入了百度故名称未调整）
+#   调用案例：
+##################################################
 
 import pyperclip
 import pyautogui
 import win32gui
 import win32con
 import win32api
+import win32clipboard as clip
 from win32con import WM_INPUTLANGCHANGEREQUEST
 from PIL import ImageGrab
 import cv2
 import time
 import sys
+from io import StringIO
 import numpy as np
-from aip import AipOcr
+#from aip import AipOcr
 
 
 class Bot(object):
@@ -60,6 +70,14 @@ class Bot(object):
         
     pass
 
+    def CheckApplication(self):
+        '''
+        检查应用是否存在
+        '''
+        self.hwnd = win32gui.FindWindow(self.AppClassName, self.AppName)
+        return self.hwnd!=None
+    pass
+
     def Exec(self,commands:list):
         """
         执行bot脚本 {COM:K,VALUE}
@@ -77,38 +95,36 @@ class Bot(object):
                 elif value["COM"]=='W':
                     self.__sleepOption(value["VALUE"])
                 elif value['COM']=='C':
-                    img=self.__CutImage(value["VALUE"])
-                    msg=self.__VerificatioImage(img)
-                    return msg
+                    self.__CutImage()
                 else:
                     print('NOT FIND COMMAND')
             pass
         pass
     pass
 
-    def __VerificatioImage(self,img):
-        """
-        验证微信图片
-        """
-        msg={'ST':False,"VS":[]}
-        try:
-            picfile='tmp.jpg'
-            vimg=np.array(img)
-            p0=cv2.cvtColor(vimg,cv2.COLOR_RGB2GRAY)
-            cv2.imwrite(picfile, p0, [int(cv2.IMWRITE_JPEG_QUALITY),95])
-            i = open(picfile, 'rb')
-            img = i.read()
-            aipOcr = AipOcr(self.APP_ID, self.API_KEY, self.SECRET_KEY)  # 初始化AipFace对象
-            message = aipOcr.basicAccurate(img)
-            for text in message.get('words_result'):  # 识别的内容
-                msg['VS'].append(text.get('words'))
-            pass
-            msg['ST']=True
-            return msg
-        except Exception as ex:
-            print(f"VerificatioImage:{ex}")
-            return msg
-    pass
+    # def __VerificatioImage(self,img):
+    #     """
+    #     验证微信图片
+    #     """
+    #     msg={'ST':False,"VS":[]}
+    #     try:
+    #         picfile='tmp.jpg'
+    #         vimg=np.array(img)
+    #         p0=cv2.cvtColor(vimg,cv2.COLOR_RGB2GRAY)
+    #         cv2.imwrite(picfile, p0, [int(cv2.IMWRITE_JPEG_QUALITY),95])
+    #         i = open(picfile, 'rb')
+    #         img = i.read()
+    #         aipOcr = AipOcr(self.APP_ID, self.API_KEY, self.SECRET_KEY)  # 初始化AipFace对象
+    #         message = aipOcr.basicAccurate(img)
+    #         for text in message.get('words_result'):  # 识别的内容
+    #             msg['VS'].append(text.get('words'))
+    #         pass
+    #         msg['ST']=True
+    #         return msg
+    #     except Exception as ex:
+    #         print(f"VerificatioImage:{ex}")
+    #         return msg
+    # pass
 
     def __CutImage(self,margin:list=[0,0,0,0]):
         """
@@ -256,9 +272,58 @@ class Bot(object):
             pyautogui.dragTo(x=X, y=Y, duration=3,button=but)
         pass
     pass
+
+    def __paseClipboard(self,mu:dict):
+        mObx=[]
+        if(mu.__contains__('A')):
+            mObx.append(mu.get('A'))
+        else:
+            raise Exception("Parem is Null")
+
+        if(mu.__contains__('B')):
+            mObx.append(mu.get('B'))
+        else:
+            raise Exception("Parem is Null")
+
+        if(mu.__contains__('C')):
+            mObx.append(mu.get('C'))
+        else:
+            raise Exception("Parem is NUll")
+
+        if(mu.__contains__('D')):
+            mObx.append(mu.get('D'))
+        else:
+            raise Exception('Parem Is NULL')
+
+        img=self.__CutImage(mu["VALUE"],mObx)
+        output=StringIO()
+        data=output.getvalue()[14:]
+        output.close()
+        clip.OpenClipboard()
+        clip.EmptyClipboard()
+        clip.SetClipboardData(win32con.CF_DIB,data)
+        clip.CloseClipboard()
+    pass
 pass
 
 
+# if __name__ == "__main__":
+#     sbot=Bot({'AppName':'微信','AppClassName':"WeChatMainWndForPC",'APIID':'',
+#         'APIKEY':'',
+#         'SECRETKEY':''})
+
+#     cmd=[
+#         {'COM':'M','VALUE':{'T':0,'X':110,'Y':40}}, 
+#         {'COM':'M','VALUE':{'T':1,'E':0,'X':None,'Y':None,'C':1}}, 
+#         {'COM':'W','VALUE':{'T':0.5}}, 
+#         {'COM':'K','VALUE':{'T':0,'M':'桃子'}},
+#         {'COM':'K','VALUE':{'T':1,'M':'enter'}},
+# 	    {'COM':'K','VALUE':{'T':0,'M':'快来学PYTHON'}},             #键盘输入abc
+#         {'COM':'K','VALUE':{'T':1,'M':'enter'}},            #键盘指定键enter
+#         {'COM':'C','VALUE':[0,0,0,0]},
+#     ]
+#     sbot.Exec(cmd)
+# pass
 
 '''
 命令结构定义
